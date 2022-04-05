@@ -55,18 +55,4 @@ public class Movie {
     @Builder.Default
     private Set<String> genres = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY) // EAGER by default
-    @JoinColumn(nullable = true, name = "fk_director_id",
-            foreignKey = @ForeignKey(name="fk_director_id"))
-    private People director;
-
-    // @Transient // when not mapped
-    @ManyToMany // fetch lazy by default
-    @JoinTable(
-            name="play",
-            joinColumns = @JoinColumn(name="fk_movie_id", foreignKey = @ForeignKey(name="fk_movie_id")),
-            inverseJoinColumns = @JoinColumn(name="fk_actor_id", foreignKey = @ForeignKey(name="fk_actor_id"))
-    )
-    @Builder.Default
-    private Set<People> actors = new HashSet<>();
 }

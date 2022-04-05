@@ -6,6 +6,8 @@ import org.hibernate.annotations.Formula;
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Entity
@@ -35,4 +37,17 @@ public class People {
     @Formula("YEAR(birthdate) ")  // name of column, function in DB !
     @Setter(AccessLevel.NONE)
     private Integer birthYear;
+
+    @OneToMany
+    @JoinColumn(name="fk_director_id")
+    @Builder.Default
+    private Set<Movie> directedMovies = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(name="play",
+        joinColumns = @JoinColumn(name="fk_actor_id"),
+        inverseJoinColumns = @JoinColumn(name="fk_movie_id")
+    )
+    @Builder.Default
+    private Set<Movie> playedMovies = new HashSet<>();
 }

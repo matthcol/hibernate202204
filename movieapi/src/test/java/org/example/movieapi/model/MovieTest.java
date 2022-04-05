@@ -85,64 +85,6 @@ class MovieTest {
 
     @Rollback(false)
     @Test
-    void testPersistWithDirector(){
-        var movie = Movie.of("Pulp Fiction", 1994);
-        var quentin = People.of("Quentin Tarantino");
-        var shyamalan = People.of("M. Night Shyamalan");
-        entityManager.persist(movie);
-        entityManager.persist(quentin);
-        entityManager.persist(shyamalan);
-        entityManager.flush(); // 2 x insert
-        movie.setDirector(shyamalan);
-        entityManager.flush(); // update
-        var idMovie = movie.getId();
-        entityManager.clear();
-        // select movie (+director if fetch eager)
-        var movieRead = entityManager.find(Movie.class, idMovie);
-        // WARNING : do not put association attributes in toString => fetch
-        System.out.println("Movie read:" + movieRead);
-        assertNotNull(movieRead.getDirector());
-        assertEquals("M. Night Shyamalan", movieRead.getDirector().getName());
-        // update director
-        movieRead.setDirector(quentin);
-        entityManager.flush();
-        // TODO : read again data
-    }
-
-    @Rollback(false)
-    @Test
-    void testPersistWithActors() {
-        var movie = Movie.of("Pulp Fiction", 1994);
-        var bruce = People.of("Bruce Willis");
-        var people = List.of(
-                People.of("John Travolta"),
-                People.of("Uma Thurman"),
-                People.of("Samuel L. Jackson"));
-        entityManager.persist(movie);
-        people.forEach(entityManager::persist);
-        // people.forEach(p -> entityManager.persist(p));
-        // for (var p: people){
-        //    entityManager.persist(p)
-        // }
-        entityManager.persist(bruce);
-        entityManager.flush(); // 1 insert into movie, 3+1 into people
-        movie.getActors().addAll(people);
-        entityManager.flush(); // 3 insert into play
-        var idMovie = movie.getId();
-        entityManager.clear();
-        var movieRead = entityManager.find(Movie.class, idMovie);
-        System.out.println(movieRead);
-        assertEquals(3, movieRead.getActors().size());
-        // modify actor list
-        movieRead.getActors().add(bruce);
-        movieRead.getActors().add(bruce); // with a Set not added twice
-        entityManager.flush(); // SQL : 1 insert into play
-        movieRead.getActors().remove(bruce);
-        entityManager.flush(); // SQL : 1 delete
-    }
-
-    @Rollback(false)
-    @Test
     void testPersistGenres(){
         var movie = Movie.of("Reservoir Dogs", 1992);
         entityManager.persist(movie);
