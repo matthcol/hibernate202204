@@ -93,7 +93,9 @@ class MovieTest {
         entityManager.persist(quentin);
         entityManager.persist(shyamalan);
         entityManager.flush(); // 2 x insert
+        // association director
         movie.setDirector(shyamalan);
+        shyamalan.getDirectedMovies().add(movie);
         entityManager.flush(); // update
         var idMovie = movie.getId();
         entityManager.clear();
@@ -105,6 +107,8 @@ class MovieTest {
         assertEquals("M. Night Shyamalan", movieRead.getDirector().getName());
         // update director
         movieRead.setDirector(quentin);
+        shyamalan.getDirectedMovies().remove(movieRead);
+        quentin.getDirectedMovies().add(movieRead);
         entityManager.flush();
         // TODO : read again data
     }
@@ -126,7 +130,9 @@ class MovieTest {
         // }
         entityManager.persist(bruce);
         entityManager.flush(); // 1 insert into movie, 3+1 into people
+        // association actors
         movie.getActors().addAll(people);
+        people.forEach(p -> p.getPlayedMovies().add(movie));
         entityManager.flush(); // 3 insert into play
         var idMovie = movie.getId();
         entityManager.clear();
@@ -136,8 +142,10 @@ class MovieTest {
         // modify actor list
         movieRead.getActors().add(bruce);
         movieRead.getActors().add(bruce); // with a Set not added twice
+        bruce.getPlayedMovies().add(movieRead);
         entityManager.flush(); // SQL : 1 insert into play
         movieRead.getActors().remove(bruce);
+        bruce.getPlayedMovies().remove(movieRead);
         entityManager.flush(); // SQL : 1 delete
     }
 
