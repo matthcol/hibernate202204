@@ -96,7 +96,9 @@ class MovieTest {
         movie.setDirector(shyamalan);
         entityManager.flush(); // update
         var idMovie = movie.getId();
-        entityManager.clear();
+        // entityManager.clear();
+        Stream.of(movie, quentin, shyamalan)
+                .forEach(entityManager::detach);
         // select movie (+director if fetch eager)
         var movieRead = entityManager.find(Movie.class, idMovie);
         // WARNING : do not put association attributes in toString => fetch
@@ -104,9 +106,29 @@ class MovieTest {
         assertNotNull(movieRead.getDirector());
         assertEquals("M. Night Shyamalan", movieRead.getDirector().getName());
         // update director
+        entityManager.merge(quentin);
         movieRead.setDirector(quentin);
         entityManager.flush();
         // TODO : read again data
+    }
+
+    @Rollback(false)
+    @Test
+    void testPersistBothMovieDirector(){
+        var movie = Movie.of("Pulp Fiction", 1994);
+        var quentin = People.of("Quentin Tarantino");
+        movie.setDirector(quentin);
+        // entityManager.persist(quentin);
+        entityManager.persist(movie);
+        entityManager.flush();
+        var idMovie = movie.getId();
+        entityManager.clear();
+        // select movie (+director if fetch eager)
+        var movieRead = entityManager.find(Movie.class, idMovie);
+        // WARNING : do not put association attributes in toString => fetch
+        System.out.println("Movie read:" + movieRead);
+        assertNotNull(movieRead.getDirector());
+        assertEquals("Quentin Tarantino", movieRead.getDirector().getName());
     }
 
     @Rollback(false)
@@ -148,6 +170,43 @@ class MovieTest {
         entityManager.persist(movie);
         var genres = Set.of("Crime", "Drama", "Thriller");
         movie.getGenres().addAll(genres);
+        entityManager.flush();
+    }
+
+    @Rollback(false)
+    @Test
+    void testRemoveWithDirector(){
+        var movie = Movie.of("Pulp Fiction", 1994);
+        var quentin = People.of("Quentin Tarantino");
+        entityManager.persist(movie);
+        entityManager.persist(quentin);
+        entityManager.flush();
+        movie.setDirector(quentin);
+        entityManager.flush();
+        var idMovie = movie.getId();
+        entityManager.clear();
+        var movieRead = entityManager.find(Movie.class, idMovie);
+        entityManager.remove(movieRead);
+        entityManager.flush();
+    }
+
+    @Rollback(false)
+    @Test
+    void testRemoveWithDirector2(){
+        var movie = Movie.of("Pulp Fiction", 1994);
+        var movie2 = Movie.of("Reservoir Dogs", 1992);
+        var quentin = People.of("Quentin Tarantino");
+        entityManager.persist(movie);
+        entityManager.persist(movie2);
+        entityManager.persist(quentin);
+        entityManager.flush();
+        movie.setDirector(quentin);
+        movie2.setDirector(quentin);
+        entityManager.flush();
+        var idMovie = movie.getId();
+        entityManager.clear();
+        var movieRead = entityManager.find(Movie.class, idMovie);
+        entityManager.remove(movieRead);
         entityManager.flush();
     }
 

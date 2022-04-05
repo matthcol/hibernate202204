@@ -55,7 +55,10 @@ public class Movie {
     @Builder.Default
     private Set<String> genres = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY) // EAGER by default
+    @ManyToOne(
+            fetch = FetchType.LAZY,  // EAGER by default
+            cascade = { CascadeType.PERSIST, CascadeType.MERGE } // REMOVE
+    )
     @JoinColumn(nullable = true, name = "fk_director_id",
             foreignKey = @ForeignKey(name="fk_director_id"))
     private People director;
