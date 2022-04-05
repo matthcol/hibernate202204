@@ -96,9 +96,8 @@ class MovieTest {
         movie.setDirector(shyamalan);
         entityManager.flush(); // update
         var idMovie = movie.getId();
-        // entityManager.clear();
-        Stream.of(movie, quentin, shyamalan)
-                .forEach(entityManager::detach);
+        var idQuentin = quentin.getId();
+        entityManager.clear();
         // select movie (+director if fetch eager)
         var movieRead = entityManager.find(Movie.class, idMovie);
         // WARNING : do not put association attributes in toString => fetch
@@ -106,8 +105,8 @@ class MovieTest {
         assertNotNull(movieRead.getDirector());
         assertEquals("M. Night Shyamalan", movieRead.getDirector().getName());
         // update director
-        entityManager.merge(quentin);
-        movieRead.setDirector(quentin);
+        var quentinRead = entityManager.find(People.class, idQuentin);
+        movieRead.setDirector(quentinRead);
         entityManager.flush();
         // TODO : read again data
     }
@@ -118,9 +117,9 @@ class MovieTest {
         var movie = Movie.of("Pulp Fiction", 1994);
         var quentin = People.of("Quentin Tarantino");
         movie.setDirector(quentin);
-        // entityManager.persist(quentin);
+        // entityManager.persist(quentin);  // persist both by programming it ;)
         entityManager.persist(movie);
-        entityManager.flush();
+        entityManager.flush();  // persist both if cascade persist else fail
         var idMovie = movie.getId();
         entityManager.clear();
         // select movie (+director if fetch eager)
@@ -187,7 +186,7 @@ class MovieTest {
         entityManager.clear();
         var movieRead = entityManager.find(Movie.class, idMovie);
         entityManager.remove(movieRead);
-        entityManager.flush();
+        entityManager.flush(); // remove only movie if not cascade remove else remove both
     }
 
     @Rollback(false)
@@ -207,7 +206,7 @@ class MovieTest {
         entityManager.clear();
         var movieRead = entityManager.find(Movie.class, idMovie);
         entityManager.remove(movieRead);
-        entityManager.flush();
+        entityManager.flush(); // remove only movie if not cascade remove else fail trying removing director too
     }
 
     private static Stream<String> wrongLengthTitles(){

@@ -57,7 +57,7 @@ public class Movie {
 
     @ManyToOne(
             fetch = FetchType.LAZY,  // EAGER by default
-            cascade = { CascadeType.PERSIST, CascadeType.MERGE } // REMOVE
+            cascade = { CascadeType.PERSIST } // REMOVE, MERGE, REFRESH, ALL
     )
     @JoinColumn(nullable = true, name = "fk_director_id",
             foreignKey = @ForeignKey(name="fk_director_id"))
