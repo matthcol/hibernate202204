@@ -12,7 +12,7 @@ import java.util.Set;
 @Table(name = "movie")
 @Getter
 @Setter
-@ToString(exclude = {"director", "actors"})
+@ToString(exclude = {"director", "actors", "genres"})
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
 @RequiredArgsConstructor(staticName = "of")
