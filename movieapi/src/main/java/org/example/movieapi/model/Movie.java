@@ -27,6 +27,7 @@ public class Movie {
 
     @NonNull // lombock
     @Column(nullable = false, length = 250)
+    @Convert(converter = EmptyStringConvertor.class)
     private String title;
 
     @NonNull

@@ -12,7 +12,11 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.FlushModeType;
 import javax.persistence.PersistenceException;
 
 import java.util.List;
@@ -27,7 +31,9 @@ class MovieTest {
 
     @Autowired
     TestEntityManager entityManager; // wrapper spring for test purpose
-    // EntityManager entityManager; // all hibernate api
+
+    @Autowired
+    EntityManager trueEntityManager; // all hibernate api
 
     // on this test only (or annotate class for all tests in this class)
     @Rollback(value = false)
@@ -50,6 +56,9 @@ class MovieTest {
         entityManager.persist(movie);
         System.out.println("Movie saved: " + movie);
         assertNotNull(movie.getId());
+        entityManager.clear();
+        var movieRead = entityManager.find(Movie.class, movie.getId());
+        assertEquals(title, movieRead.getTitle());
     }
 
     @ParameterizedTest
@@ -150,8 +159,10 @@ class MovieTest {
         movie.getActors().addAll(people);
         entityManager.flush(); // 3 insert into play
         var idMovie = movie.getId();
+        var idBruce = bruce.getId();
         entityManager.clear();
         var movieRead = entityManager.find(Movie.class, idMovie);
+        var bruceRead = entityManager.find(People.class, idBruce);
         System.out.println(movieRead);
         assertEquals(3, movieRead.getActors().size());
         // modify actor list
@@ -207,6 +218,46 @@ class MovieTest {
         var movieRead = entityManager.find(Movie.class, idMovie);
         entityManager.remove(movieRead);
         entityManager.flush(); // remove only movie if not cascade remove else fail trying removing director too
+    }
+
+    @Test
+    void testDetachMerge(){
+        var movie = Movie.of("Pulp Fiction", 1994);
+        entityManager.persist(movie);
+        entityManager.flush();;
+        entityManager.detach(movie);
+        // update entity in detach mode
+        movie.setDuration(154);
+        // reintegrate entity in hibernate cache by merging it with the version from db
+        entityManager.merge(movie);
+        entityManager.flush();;
+        entityManager.clear();;
+        var movieRead = entityManager.find(Movie.class, movie.getId());
+        assertEquals(154, movieRead.getDuration());
+    }
+
+    @Test
+    void testDetachMerge2(){
+        var movie = Movie.of("Pulp Fiction", 1994);
+        entityManager.persist(movie);
+        entityManager.flush();;
+        entityManager.detach(movie);
+        // update entity in detach mode
+        movie.setDuration(154);
+        // modify the one in the db
+        var movieRead = entityManager.find(Movie.class, movie.getId());
+        var quentin = People.of("Quentin Tarantino");
+        entityManager.persist(quentin);
+        movieRead.setDirector(quentin);
+        entityManager.flush();
+        // reintegrate entity in hibernate cache by merging it with the version from db
+        entityManager.merge(movie);
+        entityManager.flush();;
+        entityManager.clear();;
+        var movieRead2 = entityManager.find(Movie.class, movie.getId());
+        assertEquals(154, movieRead2.getDuration());
+        assertNull(movieRead2.getDirector());
+        // assertEquals("Quentin Tarantino", movieRead2.getDirector().getName());
     }
 
     private static Stream<String> wrongLengthTitles(){
